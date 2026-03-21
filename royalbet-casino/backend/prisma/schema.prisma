@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it at https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  PLAYER
+  ADMIN
+  SUPERADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  PENDING_VERIFICATION
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  BET
+  WIN
+  REFUND
+  BONUS
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REVERSED
+}
+
+enum GameType {
+  SLOTS
+  ROULETTE
+  BLACKJACK
+  CRASH
+  DICE
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id                String      @id @default(uuid())
+  email             String      @unique
+  phone             String?     @unique
+  passwordHash      String?
+  googleId          String?     @unique
+  role              UserRole    @default(PLAYER)
+  status            UserStatus  @default(PENDING_VERIFICATION)
+  kycVerified       Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  wallet            Wallet?
+  transactions      Transaction[]
+  gameSessions      GameSession[]
+  refreshTokens     RefreshToken[]
+
+  @@map("users")
+}
+
+model Wallet {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  balance     Decimal  @default(0) @db.Decimal(18, 2)
+  bonusBalance Decimal @default(0) @db.Decimal(18, 2)
+  currency    String   @default("INR")
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id              String            @id @default(uuid())
+  userId          String
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  amount          Decimal           @db.Decimal(18, 2)
+  currency        String            @default("INR")
+  razorpayOrderId String?
+  razorpayPaymentId String?
+  metadata        Json?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  user            User              @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("transactions")
+}
+
+model GameSession {
+  id          String   @id @default(uuid())
+  userId      String
+  gameType    GameType
+  betAmount   Decimal  @db.Decimal(18, 2)
+  winAmount   Decimal  @db.Decimal(18, 2) @default(0)
+  result      Json?
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("game_sessions")
+}
+
+model RefreshToken {
+  id          String   @id @default(uuid())
+  userId      String
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}

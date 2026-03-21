@@ -1,0 +1,33 @@
+{
+  "name": "royalbet-casino",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RoyalBet Casino – full-stack monorepo (Frontend, Backend, Mobile, Admin)",
+  "workspaces": [
+    "frontend",
+    "backend",
+    "admin"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:admin": "npm run dev --workspace=admin",
+    "install:all": "npm install",
+    "lint": "npm run lint --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "keywords": [
+    "casino",
+    "gaming",
+    "react",
+    "nodejs",
+    "flutter",
+    "pixijs"
+  ],
+  "author": "RoyalBet Team",
+  "license": "UNLICENSED"
+}
