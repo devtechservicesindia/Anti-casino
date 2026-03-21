@@ -8,31 +8,22 @@ export default {
     extend: {
       colors: {
         // Royal gold palette
-        gold: {
-          50:  '#fffbeb',
-          100: '#fef3c7',
-          200: '#fde68a',
-          300: '#fcd34d',
-          400: '#fbbf24',
-          500: '#f59e0b',
-          600: '#d97706',
-          700: '#b45309',
-          800: '#92400e',
-          900: '#78350f',
+        brand: {
+          light: '#FFF07C',
+          DEFAULT: '#FFD700', // Gold accent
+          dark: '#B8860B',
+          accent: '#FFD700',
         },
-        // Deep casino dark tones
         casino: {
-          950: '#0a0a0f',
-          900: '#0f0f1a',
-          800: '#1a1a2e',
-          700: '#16213e',
-          600: '#0f3460',
-          500: '#533483',
+          bg: '#0D0020', // Dark purple background
+          DEFAULT: '#0D0020',
+          card: '#1A0B2E',
+          accent: '#FFD700',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Playfair Display', 'Georgia', 'serif'],
+        sans: ['Nunito', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Boogaloo', 'cursive', 'serif'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

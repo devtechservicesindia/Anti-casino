@@ -5,6 +5,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
+import cookieParser from 'cookie-parser';
 
 import authRoutes from './routes/auth.js';
 
@@ -18,6 +19,7 @@ const server = http.createServer(app);
 app.use(helmet());
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(cookieParser());
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',

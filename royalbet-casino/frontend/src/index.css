@@ -4,11 +4,11 @@
 
 /* Root CSS variables */
 :root {
-  --color-gold: #f59e0b;
-  --color-casino-dark: #0a0a0f;
-  --color-casino-card: #1a1a2e;
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-display: 'Playfair Display', Georgia, serif;
+  --color-gold: #FFD700;
+  --color-casino-dark: #0D0020;
+  --color-casino-card: #1A0B2E;
+  --font-sans: 'Nunito', system-ui, sans-serif;
+  --font-display: 'Boogaloo', cursive, serif;
 }
 
 /* Base reset */
@@ -60,4 +60,19 @@ body {
 @keyframes shimmer {
   0%   { background-position: 0% center; }
   100% { background-position: 200% center; }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  .animate-float-delayed {
+    animation: float 6s ease-in-out 3s infinite;
+  }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); opacity: 0.8; }
+  50% { transform: translateY(-20px) rotate(5deg); opacity: 1; }
+  100% { transform: translateY(0px) rotate(0deg); opacity: 0.8; }
 }

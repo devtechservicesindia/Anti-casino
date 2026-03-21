@@ -31,6 +31,14 @@ export const register = async (req, res) => {
 export const verifyOtp = async (req, res) => {
   try {
     const result = await authService.verifyOtp(req.body);
+    if (result.refreshToken) {
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+      });
+    }
     return res.status(200).json(result);
   } catch (err) {
     return handleError(res, err);
@@ -41,6 +49,14 @@ export const verifyOtp = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const result = await authService.login(req.body);
+    if (result.refreshToken) {
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000
+      });
+    }
     return res.status(200).json(result);
   } catch (err) {
     return handleError(res, err);
@@ -51,6 +67,14 @@ export const login = async (req, res) => {
 export const googleLogin = async (req, res) => {
   try {
     const result = await authService.googleLogin(req.body);
+    if (result.refreshToken) {
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000
+      });
+    }
     return res.status(200).json(result);
   } catch (err) {
     return handleError(res, err);
@@ -60,7 +84,25 @@ export const googleLogin = async (req, res) => {
 // ─── Refresh Token ────────────────────────────────────────────────────────────
 export const refreshToken = async (req, res) => {
   try {
-    const result = await authService.refreshAccessToken(req.body);
+    // Check cookies first, fallback to body
+    const tokenInput = req.cookies?.refreshToken || req.body.refreshToken;
+    const authServiceInput = typeof req.body === 'object' && req.body.refreshToken ? req.body : { refreshToken: tokenInput };
+    
+    if (!tokenInput) {
+      return res.status(401).json({ error: 'Refresh token required' });
+    }
+
+    const ObjectInputWithToken = { ...req.body, refreshToken: tokenInput }; // if auth service takes object
+
+    const result = await authService.refreshAccessToken(ObjectInputWithToken);
+    if (result.refreshToken) {
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 30 * 24 * 60 * 60 * 1000
+      });
+    }
     return res.status(200).json(result);
   } catch (err) {
     return handleError(res, err);
@@ -72,7 +114,18 @@ export const logout = async (req, res) => {
   try {
     const token    = req.headers.authorization?.slice(7);
     const tokenExp = req.user?.exp; // from JWT payload via authenticate middleware
-    await authService.logout({ userId: req.user.id, token, tokenExp });
+    
+    // Pass refresh token too if needed by service
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+    
+    await authService.logout({ userId: req.user.id, token, tokenExp, refreshToken });
+
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
     return res.status(200).json({ message: 'Logged out successfully' });
   } catch (err) {
     return handleError(res, err);

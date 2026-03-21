@@ -160,7 +160,7 @@ describe('POST /api/v1/auth/verify-otp', () => {
     const res = await request(app).post('/api/v1/auth/verify-otp').send({ phone, otp });
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('accessToken');
-    expect(res.body).toHaveProperty('refreshToken');
+    expect(res.headers['set-cookie'][0]).toMatch(/refreshToken=/);
     expect(res.body.user).toHaveProperty('id');
   });
 
@@ -196,6 +196,7 @@ describe('POST /api/v1/auth/login', () => {
     });
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('accessToken');
+    expect(res.headers['set-cookie'][0]).toMatch(/refreshToken=/);
   });
 
   test('401 — wrong password returns generic message', async () => {
