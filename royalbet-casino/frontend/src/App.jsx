@@ -14,6 +14,7 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 // Main App Pages
 import CoinStore from './pages/CoinStore';
 import Lobby from './pages/Lobby';
+import SlotsGame from './games/slots/SlotsGame';
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/lobby" element={<Lobby />} />
             <Route path="/coin-store" element={<CoinStore />} />
+            <Route path="/game/slots" element={<SlotsGame />} />
             {/* Add games, wallet, profile here */}
           </Route>
 
