@@ -13,14 +13,7 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 
 // Main App Pages
 import CoinStore from './pages/CoinStore';
-
-// Placeholder Pages (to be implemented later)
-const LobbyPlaceholder = () => (
-  <div className="min-h-screen bg-casino-bg text-white flex flex-col gap-6 items-center justify-center font-display text-4xl">
-    Welcome to the RoyalBet Lobby 🎰
-    <a href="/coin-store" className="text-xl text-brand-accent hover:text-yellow-600 underline">Buy Coins 🪙</a>
-  </div>
-);
+import Lobby from './pages/Lobby';
 
 const queryClient = new QueryClient();
 
@@ -56,7 +49,7 @@ function App() {
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/lobby" element={<LobbyPlaceholder />} />
+            <Route path="/lobby" element={<Lobby />} />
             <Route path="/coin-store" element={<CoinStore />} />
             {/* Add games, wallet, profile here */}
           </Route>
