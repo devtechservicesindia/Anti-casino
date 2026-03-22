@@ -75,3 +75,23 @@ export const claimDailyBonus = async (req, res) => {
     return handleError(res, err);
   }
 };
+
+// ─── POST /wallet/hourly-bonus ────────────────────────────────────────────────
+export const claimHourlyBonus = async (req, res) => {
+  try {
+    const result = await walletService.claimHourlyBonus(req.user.id);
+    return res.json(result);
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+// ─── GET /wallet/bonus-status ─────────────────────────────────────────────────
+export const getBonusStatus = async (req, res) => {
+  try {
+    const result = await walletService.getBonusStatus(req.user.id);
+    return res.json(result);
+  } catch (err) {
+    return handleError(res, err);
+  }
+};

@@ -14,6 +14,8 @@ import {
   createOrder,
   verifyPayment,
   claimDailyBonus,
+  claimHourlyBonus,
+  getBonusStatus,
 } from '../controllers/walletController.js';
 
 const router = Router();
@@ -39,5 +41,11 @@ router.post('/verify-payment', verifyPayment);
 
 // POST /api/v1/wallet/daily-bonus
 router.post('/daily-bonus', claimDailyBonus);
+
+// POST /api/v1/wallet/hourly-bonus
+router.post('/hourly-bonus', claimHourlyBonus);
+
+// GET /api/v1/wallet/bonus-status
+router.get('/bonus-status', getBonusStatus);
 
 export default router;

@@ -196,43 +196,71 @@ export async function claimDailyBonus(userId) {
   const dailyKey   = `daily:${userId}`;
   const streakKey  = `streak:${userId}`;
 
-  // Check if already claimed today
   const alreadyClaimed = await redis.get(dailyKey);
   if (alreadyClaimed) throw err('Already claimed today', 409);
 
-  // Get current streak day (0 if first time)
   const currentStreak = parseInt((await redis.get(streakKey)) || '0', 10);
-  const streakDay     = (currentStreak % 7) + 1; // 1-7 cycle
+  const streakDay     = (currentStreak % 7) + 1;
   const tokensAdded   = DAILY_BONUS_TABLE[streakDay];
 
-  // SECURITY RULE 2: Prisma $transaction for wallet credit + bonus record
   const [, updatedWallet] = await prisma.$transaction([
     prisma.bonus.create({
-      data: {
-        userId,
-        type:        'DAILY',
-        tokensGiven: tokensAdded,
-        streakDay,
-      },
+      data: { userId, type: 'DAILY', tokensGiven: tokensAdded, streakDay },
     }),
     prisma.wallet.update({
       where: { userId },
-      data: {
-        balance:   { increment: tokensAdded },
-        updatedAt: new Date(),
-      },
+      data: { balance: { increment: tokensAdded }, updatedAt: new Date() },
     }),
   ]);
 
-  // Set Redis TTL until midnight (so the key expires exactly at next day start)
   const ttl = secondsUntilMidnightIST();
-  await redis.set(dailyKey,  '1',                    'EX', ttl);
+  await redis.set(dailyKey,  '1', 'EX', ttl);
   await redis.set(streakKey, String(currentStreak + 1));
 
+  return { tokensAdded, streakDay, newBalance: updatedWallet.balance };
+}
+
+// ─── 7. Hourly Bonus ──────────────────────────────────────────────────────────
+export async function claimHourlyBonus(userId) {
+  const redis = getRedis();
+  const hourlyKey = `hourly:${userId}`;
+
+  const alreadyClaimed = await redis.get(hourlyKey);
+  if (alreadyClaimed) throw err('Hourly bonus already claimed', 409);
+
+  const tokensAdded = 50; // Fixed 50 tokens for hourly bonus
+
+  const [, updatedWallet] = await prisma.$transaction([
+    prisma.bonus.create({
+      data: { userId, type: 'HOURLY', tokensGiven: tokensAdded },
+    }),
+    prisma.wallet.update({
+      where: { userId },
+      data: { balance: { increment: tokensAdded }, updatedAt: new Date() },
+    }),
+  ]);
+
+  await redis.set(hourlyKey, '1', 'EX', 3600); // 1 hour TTL
+
+  return { tokensAdded, newBalance: updatedWallet.balance };
+}
+
+// ─── 8. Get Bonus Status ──────────────────────────────────────────────────────
+export async function getBonusStatus(userId) {
+  const redis = getRedis();
+  const dailyKey = `daily:${userId}`;
+  const hourlyKey = `hourly:${userId}`;
+
+  const [dailyTtl, hourlyTtl] = await Promise.all([
+    redis.ttl(dailyKey),
+    redis.ttl(hourlyKey),
+  ]);
+
   return {
-    tokensAdded,
-    streakDay,
-    newBalance: updatedWallet.balance,
+    dailyClaimed: dailyTtl > 0,
+    dailyTtl: dailyTtl > 0 ? dailyTtl : 0,
+    hourlyClaimed: hourlyTtl > 0,
+    hourlyTtl: hourlyTtl > 0 ? hourlyTtl : 0,
   };
 }
 
