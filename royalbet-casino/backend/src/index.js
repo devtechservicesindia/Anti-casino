@@ -7,7 +7,8 @@ import compression from 'compression';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 
-import authRoutes from './routes/auth.js';
+import authRoutes   from './routes/auth.js';
+import walletRoutes from './routes/wallet.js';
 
 // Socket.io initializer (scaffold)
 // import { initSocket } from './socket/index.js';
@@ -35,10 +36,10 @@ app.get('/health', (_req, res) => {
 });
 
 // ── API Routes ────────────────────────────────────────────────────────────────
-app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/auth',   authRoutes);
+app.use('/api/v1/wallet', walletRoutes);
 // app.use('/api/v1/users',  userRoutes);   // coming soon
 // app.use('/api/v1/games',  gameRoutes);   // coming soon
-// app.use('/api/v1/wallet', walletRoutes); // coming soon
 // app.use('/api/v1/admin',  adminRoutes);  // coming soon
 
 // ── 404 handler ───────────────────────────────────────────────────────────────
