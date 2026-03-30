@@ -16,6 +16,7 @@ import CoinStore from './pages/CoinStore';
 import Lobby from './pages/Lobby';
 import SlotsGame from './games/slots/SlotsGame';
 import RouletteGame from './games/roulette/RouletteGame';
+import BlackjackGame from './games/blackjack/BlackjackGame';
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ function App() {
             <Route path="/coin-store" element={<CoinStore />} />
             <Route path="/game/slots" element={<SlotsGame />} />
             <Route path="/game/roulette" element={<RouletteGame />} />
+            <Route path="/game/blackjack" element={<BlackjackGame />} />
             {/* Add games, wallet, profile here */}
           </Route>
 
