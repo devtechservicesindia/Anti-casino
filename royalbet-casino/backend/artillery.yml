@@ -1,0 +1,90 @@
+# Artillery Load Test Suite for RoyalBet Backend
+# 
+# INSTRUCTIONS:
+#   1. npm install -g artillery
+#   2. Set TEST_JWT env variable to a valid access token for a test user
+#   3. Run:  artillery run artillery.yml
+#
+# TARGETS:
+#   ✓ 500 concurrent slot spins — P95 < 300ms
+#   ✓ 50  concurrent Razorpay order creations
+#   ✓ 100 concurrent Crash Socket.io connections (separate test)
+
+config:
+  target: "http://localhost:4000"
+  
+  # Default phases — all 3 scenarios run sequentially unless overridden
+  phases:
+    - name: "Warm-up"
+      duration: 10
+      arrivalRate: 5
+      
+    - name: "Load Ramp"
+      duration: 20
+      arrivalRate: 50
+      
+    - name: "Peak Load"
+      duration: 30
+      arrivalRate: 100
+
+  environments:
+    prod:
+      target: "https://royalbet-api.example.com"
+
+  variables:
+    # Override with: artillery run artillery.yml --variables '{"jwt":"..."}'
+    jwt: "{{ $env.TEST_JWT }}"
+    
+  plugins:
+    ensure: {}  # Validates performance thresholds
+
+  # SLA thresholds
+  ensure:
+    p95: 300     # P95 must be < 300ms
+    maxErrorRate: 1  # < 1% error rate
+
+scenarios:
+  # ── SCENARIO 1: Slot Spins ────────────────────────────────────────────────
+  - name: "Concurrent Slot Spins"
+    weight: 6  # 60% of traffic
+    flow:
+      - post:
+          url: "/api/v1/games/slots/spin"
+          headers:
+            Authorization: "Bearer {{ jwt }}"
+            Content-Type: "application/json"
+          json:
+            betAmount: 10
+            clientSeed: "artillery_test_{{ $uuid }}"
+          capture:
+            - json: "$.winAmount"
+              as: "winAmount"
+          expect:
+            - statusCode: 200
+              
+  # ── SCENARIO 2: Razorpay Order Creation ──────────────────────────────────
+  - name: "Concurrent Razorpay Orders"
+    weight: 2  # 20% of traffic
+    flow:
+      - post:
+          url: "/api/v1/wallet/create-order"
+          headers:
+            Authorization: "Bearer {{ jwt }}"
+            Content-Type: "application/json"
+          json:
+            packageId: "pkg_starter_1"
+          expect:
+            - statusCode:
+                - 201
+                - 404  # packageId not found in test env is acceptable
+                
+  # ── SCENARIO 3: Leaderboard reads (high-traffic public) ──────────────────
+  - name: "Leaderboard Reads"
+    weight: 2  # 20% of traffic
+    flow:
+      - get:
+          url: "/api/v1/leaderboard/top?type=SLOTS&period=DAILY&limit=10"
+          headers:
+            Authorization: "Bearer {{ jwt }}"
+          expect:
+            - statusCode: 200

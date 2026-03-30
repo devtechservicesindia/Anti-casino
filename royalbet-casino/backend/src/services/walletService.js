@@ -289,52 +289,58 @@ export async function getBonusStatus(userId) {
  * Deduct tokens from a user's wallet atomically.
  * Returns error if balance < amount.  Never goes negative.
  *
- * CONCURRENCY SAFETY: Uses $transaction with a raw UPDATE ... WHERE balance >= amount
- * to prevent race conditions even under 100 concurrent requests.
+ * FIX #6: RACE CONDITION — use Serializable isolation level so that
+ * concurrent reads see the locked committed value, preventing double-spend.
+ * Under high load (100+ concurrent requests), each transaction either
+ * commits with correct balance or is retried/rejected by Postgres.
  */
 export async function deductTokens(userId, amount, gameType = 'GAME') {
   const decAmount = new Decimal(amount);
   if (decAmount.lte(0)) throw err('Amount must be positive', 400);
 
-  // Fetch current balance inside a transaction to lock the row
+  // FIX #6: Serializable isolation prevents TOCTOU race condition
   const result = await prisma.$transaction(async (tx) => {
     const wallet = await tx.wallet.findUnique({ where: { userId } });
     if (!wallet) throw err('Wallet not found', 404);
 
-    // SECURITY RULE 6: Decimal comparison — never native float
+    // SECURITY: Decimal comparison — never native float
     const balance = new Decimal(wallet.balance.toString());
     if (balance.lt(decAmount)) {
       throw err('Insufficient balance', 402);
     }
 
-    const [txnRecord, updatedWallet] = await Promise.all([
-      tx.transaction.create({
-        data: {
-          userId,
-          type:   'SPEND',
-          amount: decAmount.toDecimalPlaces(2).toString(),
-          status: 'SUCCESS',
-          note:   `Game deduction: ${gameType}`,
-        },
-      }),
-      tx.wallet.update({
-        where: { userId },
-        data:  {
-          balance:   { decrement: decAmount.toNumber() },
-          totalSpent:{ increment: decAmount.toNumber() },
-          updatedAt: new Date(),
-        },
-      }),
-    ]);
+    // Sequential operations within the serializable transaction
+    const updatedWallet = await tx.wallet.update({
+      where: { userId },
+      data: {
+        balance:    { decrement: decAmount.toNumber() },
+        totalSpent: { increment: decAmount.toNumber() },
+        updatedAt:  new Date(),
+      },
+    });
+
+    const txnRecord = await tx.transaction.create({
+      data: {
+        userId,
+        type:   'SPEND',
+        amount: decAmount.toDecimalPlaces(2).toString(),
+        status: 'SUCCESS',
+        note:   `Game deduction: ${gameType}`,
+      },
+    });
 
     return { txnRecord, updatedWallet };
+  }, {
+    // FIX #6: Prevent concurrent read-modify-write race conditions
+    isolationLevel: 'Serializable',
   });
 
   return {
-    newBalance:   result.updatedWallet.balance,
-    amountSpent:  decAmount.toNumber(),
+    newBalance:  result.updatedWallet.balance,
+    amountSpent: decAmount.toNumber(),
   };
 }
+
 
 // ─── INTERNAL: Credit Winnings (used by game routes) ──────────────────────────
 export async function creditWinnings(userId, amount, gameType = 'GAME') {

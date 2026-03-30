@@ -1,0 +1,39 @@
+# Artillery Socket.io Load Test — Crash Game
+# Tests 100 concurrent Socket.io connections to the Crash game
+#
+# Usage: artillery run artillery-socket.yml
+
+config:
+  target: "http://localhost:4000"
+  
+  phases:
+    - name: "Crash Socket Ramp"
+      duration: 20
+      arrivalRate: 5    # 5 VU/s × 20s = 100 total connections
+
+  engines:
+    socketio: {}
+
+  socketio:
+    path: "/socket.io/"
+    transports:
+      - websocket
+    extraHeaders:
+      Authorization: "Bearer {{ $env.TEST_JWT }}"
+
+  ensure:
+    maxErrorRate: 5  # Allow up to 5% for socket tests (harder to control)
+
+scenarios:
+  - name: "Crash Game Socket Connection"
+    engine: socketio
+    flow:
+      - emit:
+          channel: "join:crash"
+      - think: 1  # Wait for server acknowledgement
+      - on:
+          channel: "crashMultiplier"
+          capture:
+            - json: "$.multiplier"
+              as: "multiplier"
+      - think: 2  # Stay connected for 2 more seconds

@@ -5,8 +5,8 @@
  */
 
 import { Router } from 'express';
-import { authenticate }   from '../middleware/authenticate.js';
-import { authRateLimiter } from '../middleware/rateLimiter.js';
+import { authenticate }      from '../middleware/authenticate.js';
+import { walletRateLimiter } from '../middleware/rateLimiter.js';
 import {
   getBalance,
   getPackages,
@@ -19,6 +19,9 @@ import {
 } from '../controllers/walletController.js';
 
 const router = Router();
+
+// FIX #5: Apply wallet rate limiter to ALL wallet routes (30 req/min/IP)
+router.use(walletRateLimiter);
 
 // ── Public ────────────────────────────────────────────────────────────────────
 // GET /api/v1/wallet/packages — no auth required (marketing page)

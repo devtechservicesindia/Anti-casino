@@ -35,9 +35,22 @@ app.use(helmet());
 app.use(compression());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cookieParser());
+// FIX #3: CORS strict-mode — NEVER use a hardcoded fallback in production.
+// If FRONTEND_URL is not set, we deny all cross-origin requests.
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(o => o.trim())
+  : (process.env.NODE_ENV !== 'production' ? ['http://localhost:5173', 'http://localhost:5174'] : []);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow same-origin and non-browser requests (curl, Postman) in dev
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin '${origin}' not allowed`));
+      }
+    },
     credentials: true,
   })
 );
@@ -70,11 +83,20 @@ app.use((_req, res) => {
 });
 
 // ── Global error handler ──────────────────────────────────────────────────────
+// FIX #4: Never expose stack traces. Log sanitized info only in non-production.
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+  const statusCode = err.status || 500;
+  if (process.env.NODE_ENV !== 'production') {
+    // Development: log the stack for debugging
+    console.error(`[${statusCode}] ${err.message}\n${err.stack}`);
+  } else {
+    // Production: log only generic info, never the stack
+    console.error(`[${statusCode}] ${err.message}`);
+  }
+  res.status(statusCode).json({
+    // CLIENT-FACING: never expose err.message for 5xx errors
+    error: statusCode < 500 ? err.message : 'Internal server error',
   });
 });
 

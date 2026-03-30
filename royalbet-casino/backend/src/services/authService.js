@@ -135,31 +135,6 @@ export async function verifyOtp({ phone, otp }) {
 
 // ─── 3. Login ─────────────────────────────────────────────────────────────────
 export async function login({ emailOrPhone, password }) {
-  // ── DEVELOPMENT FALLBACK: Hardcoded bypass for the requested admin ─────────
-  if (process.env.NODE_ENV !== 'production') {
-    const devAdminEmail = 'yvcasino@gmail.com';
-    const devAdminPass  = 'yv@123admin';
-    if (emailOrPhone === devAdminEmail && password === devAdminPass) {
-      console.warn(`[DEVELOPMENT] Hardcoded admin login override for: ${devAdminEmail}`);
-      // Find user if possible, else return mock
-      const user = await prisma.user.findUnique({ where: { email: devAdminEmail } }).catch(() => null);
-      if (user) {
-        const tokens = await issueTokens(user).catch(() => {
-          const payload = { id: user.id, email: user.email, role: user.role };
-          return { accessToken: signAccessToken(payload), refreshToken: signRefreshToken(payload) };
-        });
-        return { ...tokens, user: safeUser(user) };
-      }
-      // Fully mock if DB is down
-      const mockPayload = { id: 'admin_mock', email: devAdminEmail, role: 'ADMIN' };
-      return { 
-        accessToken: signAccessToken(mockPayload), 
-        refreshToken: signRefreshToken(mockPayload), 
-        user: { id: 'admin_mock', name: 'YV Dev Admin', email: devAdminEmail, role: 'ADMIN' } 
-      };
-    }
-  }
-
   // Find by email OR phone
   const user = await prisma.user.findFirst({
     where: {
