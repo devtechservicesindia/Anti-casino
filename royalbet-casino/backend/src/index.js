@@ -9,7 +9,8 @@ import cookieParser from 'cookie-parser';
 
 import authRoutes   from './routes/auth.js';
 import walletRoutes from './routes/wallet.js';
-import slotsRoutes  from './games/slots/slots.js';
+import slotsRoutes    from './games/slots/slots.js';
+import rouletteRoutes from './games/roulette/roulette.js';
 
 // Socket.io initializer (scaffold)
 // import { initSocket } from './socket/index.js';
@@ -40,6 +41,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/v1/auth',   authRoutes);
 app.use('/api/v1/wallet', walletRoutes);
 app.use('/api/v1/games/slots', slotsRoutes);
+app.use('/api/v1/games/roulette', rouletteRoutes);
 // app.use('/api/v1/users',  userRoutes);   // coming soon
 // app.use('/api/v1/admin',  adminRoutes);  // coming soon
 
