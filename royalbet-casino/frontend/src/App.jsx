@@ -18,6 +18,8 @@ import SlotsGame from './games/slots/SlotsGame';
 import RouletteGame from './games/roulette/RouletteGame';
 import BlackjackGame from './games/blackjack/BlackjackGame';
 import CrashGame from './games/crash/CrashGame';
+import PokerLobby from './games/poker/PokerLobby';
+import PokerTable from './games/poker/PokerTable';
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,8 @@ function App() {
             <Route path="/game/roulette" element={<RouletteGame />} />
             <Route path="/game/blackjack" element={<BlackjackGame />} />
             <Route path="/game/crash" element={<CrashGame />} />
+            <Route path="/game/poker" element={<PokerLobby />} />
+            <Route path="/game/poker/table/:tableId" element={<PokerTable />} />
             {/* Add games, wallet, profile here */}
           </Route>
 

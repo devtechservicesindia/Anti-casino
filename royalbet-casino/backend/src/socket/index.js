@@ -1,6 +1,7 @@
 // socket/index.js – Socket.io 4 server initialisation
 import { Server } from 'socket.io';
 import { initCrashManager } from '../games/crash/crashManager.js';
+import { initPokerSocket } from '../games/poker/pokerSocket.js';
 
 /**
  * Initialise the Socket.io server and attach all namespace handlers.
@@ -27,6 +28,9 @@ export function initSocket(httpServer) {
 
   // ── Init Crash game manager ──────────────────────────────────────────────
   initCrashManager(io);
+
+  // ── Init Poker socket handlers ───────────────────────────────────────────
+  initPokerSocket(io);
 
   return io;
 }
