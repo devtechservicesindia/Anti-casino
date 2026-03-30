@@ -12,9 +12,10 @@ import walletRoutes from './routes/wallet.js';
 import slotsRoutes    from './games/slots/slots.js';
 import rouletteRoutes from './games/roulette/roulette.js';
 import blackjackRoutes from './games/blackjack/blackjack.js';
+import crashRoutes     from './games/crash/crash.js';
 
-// Socket.io initializer (scaffold)
-// import { initSocket } from './socket/index.js';
+// Socket.io initializer
+import { initSocket } from './socket/index.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -44,6 +45,7 @@ app.use('/api/v1/wallet', walletRoutes);
 app.use('/api/v1/games/slots', slotsRoutes);
 app.use('/api/v1/games/roulette', rouletteRoutes);
 app.use('/api/v1/games/blackjack', blackjackRoutes);
+app.use('/api/v1/games/crash',     crashRoutes);
 // app.use('/api/v1/users',  userRoutes);   // coming soon
 // app.use('/api/v1/admin',  adminRoutes);  // coming soon
 
@@ -61,8 +63,8 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-// ── Socket.io ─────────────────────────────────────────────────────────────────
-// initSocket(server);
+// ── Socket.io ─────────────────────────────────────────────────────────────
+initSocket(server);
 
 // ── Start server ──────────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== 'test') {

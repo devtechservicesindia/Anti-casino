@@ -1,5 +1,6 @@
 // socket/index.js – Socket.io 4 server initialisation
 import { Server } from 'socket.io';
+import { initCrashManager } from '../games/crash/crashManager.js';
 
 /**
  * Initialise the Socket.io server and attach all namespace handlers.
@@ -15,14 +16,6 @@ export function initSocket(httpServer) {
     transports: ['websocket', 'polling'],
   });
 
-  // ── Auth middleware ──────────────────────────────────────────────────────
-  // io.use(socketAuthMiddleware);
-
-  // ── Namespaces ───────────────────────────────────────────────────────────
-  // const gameNamespace   = io.of('/game');
-  // const walletNamespace = io.of('/wallet');
-  // const chatNamespace   = io.of('/chat');
-
   // ── Default namespace ────────────────────────────────────────────────────
   io.on('connection', (socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
@@ -30,9 +23,10 @@ export function initSocket(httpServer) {
     socket.on('disconnect', (reason) => {
       console.log(`[Socket] Client disconnected: ${socket.id} – ${reason}`);
     });
-
-    // TODO: register game event listeners per namespace
   });
+
+  // ── Init Crash game manager ──────────────────────────────────────────────
+  initCrashManager(io);
 
   return io;
 }

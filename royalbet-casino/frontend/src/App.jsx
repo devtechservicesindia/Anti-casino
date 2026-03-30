@@ -17,6 +17,7 @@ import Lobby from './pages/Lobby';
 import SlotsGame from './games/slots/SlotsGame';
 import RouletteGame from './games/roulette/RouletteGame';
 import BlackjackGame from './games/blackjack/BlackjackGame';
+import CrashGame from './games/crash/CrashGame';
 
 const queryClient = new QueryClient();
 
@@ -57,6 +58,7 @@ function App() {
             <Route path="/game/slots" element={<SlotsGame />} />
             <Route path="/game/roulette" element={<RouletteGame />} />
             <Route path="/game/blackjack" element={<BlackjackGame />} />
+            <Route path="/game/crash" element={<CrashGame />} />
             {/* Add games, wallet, profile here */}
           </Route>
 
