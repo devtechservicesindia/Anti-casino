@@ -14,6 +14,7 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 // Main App Pages
 import CoinStore from './pages/CoinStore';
 import Lobby from './pages/Lobby';
+import Leaderboard from './pages/Leaderboard';
 import SlotsGame from './games/slots/SlotsGame';
 import RouletteGame from './games/roulette/RouletteGame';
 import BlackjackGame from './games/blackjack/BlackjackGame';
@@ -56,6 +57,7 @@ function App() {
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/lobby" element={<Lobby />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
             <Route path="/coin-store" element={<CoinStore />} />
             <Route path="/game/slots" element={<SlotsGame />} />
             <Route path="/game/roulette" element={<RouletteGame />} />

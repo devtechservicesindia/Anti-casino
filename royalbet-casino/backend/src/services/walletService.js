@@ -15,6 +15,7 @@ import { PrismaClient }                    from '@prisma/client';
 import Decimal                             from 'decimal.js';
 import { getRedis }                        from './redisService.js';
 import { createOrder, verifySignature }    from './razorpayService.js';
+import { recordWin }                       from './leaderboardService.js';
 
 const prisma = new PrismaClient();
 
@@ -339,6 +340,15 @@ export async function creditWinnings(userId, amount, gameType = 'GAME') {
       },
     }),
   ]);
+
+  // Record win in leaderboard (fire-and-forget — don't block payout)
+  const validTypes = ['SLOTS', 'ROULETTE', 'BLACKJACK', 'CRASH', 'POKER'];
+  const lbType = validTypes.includes(gameType?.toUpperCase()) ? gameType.toUpperCase() : null;
+  if (lbType) {
+    recordWin(userId, lbType, decAmount.toNumber()).catch(e =>
+      console.warn('[Leaderboard] recordWin failed:', e.message)
+    );
+  }
 
   return {
     newBalance:    updatedWallet.balance,
