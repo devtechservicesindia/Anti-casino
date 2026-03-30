@@ -17,7 +17,6 @@ import { getRedis }                        from './redisService.js';
 import { createOrder, verifySignature }    from './razorpayService.js';
 import { recordWin }                       from './leaderboardService.js';
 import { checkAchievements }               from './achievementService.js';
-import { triggerReferralBonus }            from '../referral/referralController.js';
 
 const prisma = new PrismaClient();
 
@@ -200,7 +199,11 @@ export async function verifyPayment(userId, payload) {
   const result = await _verifyPaymentCore(userId, payload);
 
   // Fire-and-forget: referral bonus on first purchase
-  triggerReferralBonus(userId).catch(e => console.warn('[Referral]', e.message));
+  // BREAK CIRCULAR DEP: Dynamic import for referralController
+  import('../referral/referralController.js').then(({ triggerReferralBonus }) => {
+    triggerReferralBonus(userId).catch(e => console.warn('[Referral]', e.message));
+  }).catch(e => console.warn('[Referral Import Failed]', e.message));
+
   // Fire-and-forget: purchase achievement check
   checkAchievements(userId, 'PURCHASE', {}).catch(e => console.warn('[Achievement]', e.message));
 

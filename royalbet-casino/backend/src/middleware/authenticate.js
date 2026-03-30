@@ -10,6 +10,7 @@ export const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log('[Auth Debug] Missing or invalid auth header:', authHeader);
     return res.status(401).json({ error: 'Unauthorised' });
   }
 
@@ -20,6 +21,7 @@ export const authenticate = (req, res, next) => {
     req.user = payload; // { id, email, role }
     next();
   } catch (err) {
+    console.log('[Auth Debug] JWT verify error:', err.message, 'Token:', token);
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({ error: 'Token expired' });
     }

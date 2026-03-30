@@ -3,7 +3,7 @@
  */
 
 import { Router }   from 'express';
-import authenticate  from '../../middleware/authenticate.js';
+import { authenticate } from '../../middleware/authenticate.js';
 import { handleSpin } from './rouletteController.js';
 
 const router = Router();

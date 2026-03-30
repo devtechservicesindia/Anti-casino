@@ -11,6 +11,9 @@
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -122,6 +125,7 @@ const ACHIEVEMENTS = [
 async function main() {
   console.log('🌱 Starting database seed...\n');
 
+  /*
   // ── 1. Token Packages ──────────────────────────────────────────────────────
   console.log('📦 Seeding TokenPackages...');
   for (const pkg of TOKEN_PACKAGES) {
@@ -145,12 +149,13 @@ async function main() {
       create: ach,
     });
   }
-  console.log(`   ✓ ${ACHIEVEMENTS.length} achievements seeded.\n`);
+  console.log(`   ✓ ${ ACHIEVEMENTS.length } achievements seeded.\n`);
+  */
 
   // ── 3. Admin User ──────────────────────────────────────────────────────────
   console.log('👤 Seeding Admin user...');
-  const adminEmail = 'admin@royalbet.in';
-  const adminPasswordHash = await bcrypt.hash('Admin@RoyalBet2025!', 12);
+  const adminEmail = 'yvcasino@gmail.com';
+  const adminPasswordHash = await bcrypt.hash('yv@123admin', 12);
 
   const admin = await prisma.user.upsert({
     where: { email: adminEmail },

@@ -3,7 +3,7 @@
  */
 
 import { Router }    from 'express';
-import authenticate   from '../middleware/authenticate.js';
+import { authenticate } from '../middleware/authenticate.js';
 import { handleMyCode, handleStats, handleApply } from './referralController.js';
 
 const router = Router();

@@ -38,7 +38,9 @@ let roundTimeout = null;
 // ─── Initialise ───────────────────────────────────────────────────────────────
 export function initCrashManager(socketIo) {
   io = socketIo;
-  startNewRound();
+  startNewRound().catch(err => {
+    console.error('[CrashManager] Initial round start failed (Redis down?):', err.message);
+  });
 }
 
 // ─── Get current round state from Redis ───────────────────────────────────────

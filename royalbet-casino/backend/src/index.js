@@ -17,6 +17,7 @@ import leaderboardRoutes from './leaderboard/leaderboard.js';
 import tournamentRoutes  from './tournament/tournament.js';
 import referralRoutes    from './referral/referral.js';
 import achievementRoutes from './achievement/achievement.js';
+import adminRoutes       from './admin/admin.js';
 
 // Socket.io initializer
 import { initSocket } from './socket/index.js';
@@ -59,6 +60,7 @@ app.use('/api/v1/leaderboard',      leaderboardRoutes);
 app.use('/api/v1/tournaments',      tournamentRoutes);
 app.use('/api/v1/referral',         referralRoutes);
 app.use('/api/v1/achievements',     achievementRoutes);
+app.use('/api/v1/admin',            adminRoutes);
 // app.use('/api/v1/users',  userRoutes);   // coming soon
 // app.use('/api/v1/admin',  adminRoutes);  // coming soon
 
@@ -77,13 +79,18 @@ app.use((err, _req, res, _next) => {
 });
 
 // ── Socket.io ─────────────────────────────────────────────────────────────
-initSocket(server);
+const io = initSocket(server);
+app.set('io', io); // Make io available in req.app.get('io')
 
 // ── Background crons ─────────────────────────────────────────────────────────
 if (process.env.NODE_ENV !== 'test') {
-  startLeaderboardSync();
-  startTournamentCron();
-  seedAchievements().catch(console.error); // idempotent upsert on boot
+  try {
+    startLeaderboardSync();
+    startTournamentCron();
+    seedAchievements().catch(err => console.error('[Achievement Seed Error]:', err.message));
+  } catch (err) {
+    console.error('[Cron/Seed Initialization Error]:', err.message);
+  }
 }
 
 // ── Start server ──────────────────────────────────────────────────────────────
