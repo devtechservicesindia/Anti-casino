@@ -16,6 +16,8 @@ import Decimal                             from 'decimal.js';
 import { getRedis }                        from './redisService.js';
 import { createOrder, verifySignature }    from './razorpayService.js';
 import { recordWin }                       from './leaderboardService.js';
+import { checkAchievements }               from './achievementService.js';
+import { triggerReferralBonus }            from '../referral/referralController.js';
 
 const prisma = new PrismaClient();
 
@@ -123,7 +125,7 @@ export async function createTokenOrder(userId, { packageId }) {
 }
 
 // ─── 5. Verify Payment & Credit Tokens ────────────────────────────────────────
-export async function verifyPayment(userId, { razorpayOrderId, razorpayPaymentId, razorpaySignature }) {
+async function _verifyPaymentCore(userId, { razorpayOrderId, razorpayPaymentId, razorpaySignature }) {
   // SECURITY RULE 4: check duplicate paymentId BEFORE anything else
   const duplicate = await prisma.transaction.findFirst({
     where: { razorpayPaymentId },
@@ -189,6 +191,20 @@ export async function verifyPayment(userId, { razorpayOrderId, razorpayPaymentId
     tokensAdded: tokensToAdd.toNumber(),
     bonusTokens: pkg.bonusTokens,
   };
+
+  // Note: post-return hooks below run via fire-and-forget BEFORE return
+}
+
+// (wrapper with side-effects — replaces export above)
+export async function verifyPayment(userId, payload) {
+  const result = await _verifyPaymentCore(userId, payload);
+
+  // Fire-and-forget: referral bonus on first purchase
+  triggerReferralBonus(userId).catch(e => console.warn('[Referral]', e.message));
+  // Fire-and-forget: purchase achievement check
+  checkAchievements(userId, 'PURCHASE', {}).catch(e => console.warn('[Achievement]', e.message));
+
+  return result;
 }
 
 // ─── 6. Daily Bonus ───────────────────────────────────────────────────────────

@@ -15,6 +15,8 @@ import blackjackRoutes from './games/blackjack/blackjack.js';
 import crashRoutes     from './games/crash/crash.js';
 import leaderboardRoutes from './leaderboard/leaderboard.js';
 import tournamentRoutes  from './tournament/tournament.js';
+import referralRoutes    from './referral/referral.js';
+import achievementRoutes from './achievement/achievement.js';
 
 // Socket.io initializer
 import { initSocket } from './socket/index.js';
@@ -22,6 +24,7 @@ import { initSocket } from './socket/index.js';
 // Background crons
 import { startLeaderboardSync } from './services/leaderboardService.js';
 import { startTournamentCron }  from './tournament/tournamentController.js';
+import { seedAchievements }     from './services/achievementService.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -54,6 +57,8 @@ app.use('/api/v1/games/blackjack', blackjackRoutes);
 app.use('/api/v1/games/crash',     crashRoutes);
 app.use('/api/v1/leaderboard',      leaderboardRoutes);
 app.use('/api/v1/tournaments',      tournamentRoutes);
+app.use('/api/v1/referral',         referralRoutes);
+app.use('/api/v1/achievements',     achievementRoutes);
 // app.use('/api/v1/users',  userRoutes);   // coming soon
 // app.use('/api/v1/admin',  adminRoutes);  // coming soon
 
@@ -78,6 +83,7 @@ initSocket(server);
 if (process.env.NODE_ENV !== 'test') {
   startLeaderboardSync();
   startTournamentCron();
+  seedAchievements().catch(console.error); // idempotent upsert on boot
 }
 
 // ── Start server ──────────────────────────────────────────────────────────────
