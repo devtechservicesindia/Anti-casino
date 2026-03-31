@@ -13,6 +13,7 @@ import {
   createTournament, updateTournament,
   sendNotification, getAdminLogs,
 } from './adminController.js';
+import { adjustCoins, searchUser, getUserCoinHistory } from './coinController.js';
 
 const router = Router();
 // Apply auth to all admin routes
@@ -41,5 +42,10 @@ router.post('/notifications/send',     sendNotification);
 
 // ── Admin logs ───────────────────────────────────────────────────────────────
 router.get('/logs',                    getAdminLogs);
+
+// ── Coin Management ──────────────────────────────────────────────────────────
+router.get('/coins/search',            searchUser);
+router.post('/coins/adjust',           adjustCoins);
+router.get('/coins/history/:userId',   getUserCoinHistory);
 
 export default router;

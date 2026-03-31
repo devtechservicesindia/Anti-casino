@@ -8,6 +8,7 @@ import Transactions  from './screens/Transactions.jsx';
 import GameAudit     from './screens/GameAudit.jsx';
 import Tournaments   from './screens/Tournaments.jsx';
 import Notifications from './screens/Notifications.jsx';
+import CoinManagement from './screens/CoinManagement.jsx';
 
 function isLoggedIn() {
   return !!localStorage.getItem('adminToken');
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="games"        element={<GameAudit />} />
           <Route path="tournaments"  element={<Tournaments />} />
           <Route path="notifications" element={<Notifications />} />
+          <Route path="coins"        element={<CoinManagement />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -72,27 +72,48 @@ export async function register({ name, email, phone, password }) {
   });
   if (existing) {
     // Generic message — never reveal which field conflicts
-    throw Object.assign(new Error('Invalid credentials'), { status: 409 });
+    throw Object.assign(new Error('An account with that email or phone already exists. Please log in.'), { status: 409 });
   }
 
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-  // Create user (unverified)
+  // Create user
   const user = await prisma.user.create({
     data: { name, email, phone, passwordHash, role: 'USER' },
   });
 
-  // Generate + hash OTP → store in Redis with TTL
+  // ── DEV MODE: skip OTP when Redis is not available ──────────────────────────
+  // In production, REDIS_URL must be set, which activates real OTP via Twilio.
+  if (!process.env.REDIS_URL) {
+    console.log(`\n[DEV] Redis not configured — auto-verifying registration for ${email}\n`);
+
+    // Provision wallet + welcome bonus atomically
+    await prisma.$transaction([
+      prisma.wallet.create({
+        data: { userId: user.id, balance: WELCOME_TOKENS, totalPurchased: 0, totalSpent: 0 },
+      }),
+      prisma.bonus.create({
+        data: { userId: user.id, type: 'WELCOME', tokensGiven: WELCOME_TOKENS, streakDay: null },
+      }),
+    ]);
+
+    const { accessToken, refreshToken } = await issueTokens(user);
+    // Return tokens directly so the frontend can log the user in immediately
+    return { accessToken, refreshToken, user: safeUser(user), devMode: true };
+  }
+
+  // ── PRODUCTION: send OTP via Redis + Twilio (real flow) ────────────────────
   const otp    = generateOtp();
   const otpHash = await bcrypt.hash(otp, BCRYPT_ROUNDS);
   const redis   = getRedis();
   await redis.set(`otp:${phone}`, otpHash, 'EX', OTP_TTL_SECONDS);
 
-  // ── Twilio deferred: print OTP to console for testing ──────────────────────
+  // Print OTP to console (Twilio integration deferred)
   console.log(`\n[OTP] Phone: ${phone}  OTP: ${otp}  (TTL: ${OTP_TTL_SECONDS}s)\n`);
 
   return { message: 'OTP sent' };
 }
+
 
 // ─── 2. Verify OTP ────────────────────────────────────────────────────────────
 export async function verifyOtp({ phone, otp }) {

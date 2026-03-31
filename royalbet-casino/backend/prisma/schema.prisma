@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  RoyalBet Casino – Prisma Schema
-//  Database : PostgreSQL 16
+//  Database : SQLite (local dev) — swap provider + restore enums for production
 //  ORM      : Prisma 5
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -9,69 +9,15 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")   // pgBouncer pooler — used at runtime
-  directUrl = env("DIRECT_URL")     // direct connection — used by prisma migrate
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-//  ENUMS
-// ═════════════════════════════════════════════════════════════════════════════
-
-enum UserRole {
-  USER
-  ADMIN
-}
-
-enum TransactionType {
-  PURCHASE
-  SPEND
-  BONUS
-  REFUND
-}
-
-enum TransactionStatus {
-  PENDING
-  SUCCESS
-  FAILED
-}
-
-enum GameType {
-  SLOTS
-  POKER
-  ROULETTE
-  BLACKJACK
-  CRASH
-}
-
-enum GameResult {
-  WIN
-  LOSE
-  PUSH
-}
-
-enum BonusType {
-  DAILY
-  WELCOME
-  REFERRAL
-  HOURLY
-  STREAK
-}
-
-enum LeaderboardPeriod {
-  DAILY
-  WEEKLY
-  ALLTIME
-}
-
-enum TournamentStatus {
-  UPCOMING
-  LIVE
-  COMPLETED
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
 //  MODELS
+//  NOTE: SQLite does not support native enums or Json.
+//        Enum fields are stored as String; Json is stored as String.
+//        Values should still match the enum constants used in app code.
 // ═════════════════════════════════════════════════════════════════════════════
 
 // ── 1. User ──────────────────────────────────────────────────────────────────
@@ -84,7 +30,7 @@ model User {
   googleId     String?  @unique
   avatarUrl    String?
   isBanned     Boolean  @default(false)
-  role         UserRole @default(USER)
+  role         String   @default("USER")   // UserRole: USER | ADMIN
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -108,9 +54,9 @@ model User {
 model Wallet {
   id             String   @id @default(cuid())
   userId         String   @unique
-  balance        Decimal  @default(500)   @db.Decimal(18, 4)
-  totalPurchased Decimal  @default(0)     @db.Decimal(18, 4)
-  totalSpent     Decimal  @default(0)     @db.Decimal(18, 4)
+  balance        Decimal  @default(500)
+  totalPurchased Decimal  @default(0)
+  totalSpent     Decimal  @default(0)
   updatedAt      DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -124,7 +70,7 @@ model TokenPackage {
   id           String   @id @default(cuid())
   name         String
   tokenAmount  Int
-  priceInr     Decimal  @db.Decimal(10, 2)
+  priceInr     Decimal
   bonusTokens  Int      @default(0)
   isActive     Boolean  @default(true)
   displayOrder Int
@@ -136,16 +82,16 @@ model TokenPackage {
 
 // ── 4. Transaction ────────────────────────────────────────────────────────────
 model Transaction {
-  id                String            @id @default(cuid())
+  id                String   @id @default(cuid())
   userId            String
-  type              TransactionType
-  amount            Decimal           @db.Decimal(18, 4)
+  type              String   // TransactionType: PURCHASE | SPEND | BONUS | REFUND
+  amount            Decimal
   razorpayOrderId   String?
   razorpayPaymentId String?
-  status            TransactionStatus @default(PENDING)
+  status            String   @default("PENDING")  // TransactionStatus: PENDING | SUCCESS | FAILED
   note              String?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -155,19 +101,19 @@ model Transaction {
 
 // ── 5. GameSession ────────────────────────────────────────────────────────────
 model GameSession {
-  id         String     @id @default(cuid())
+  id         String   @id @default(cuid())
   userId     String
-  gameType   GameType
-  betAmount  Decimal    @db.Decimal(18, 4)
-  winAmount  Decimal    @default(0) @db.Decimal(18, 4)
-  result     GameResult
+  gameType   String   // GameType: SLOTS | POKER | ROULETTE | BLACKJACK | CRASH
+  betAmount  Decimal
+  winAmount  Decimal  @default(0)
+  result     String   // GameResult: WIN | LOSE | PUSH
   serverSeed String?
   clientSeed String?
-  nonce      Int        @default(0)
-  metadata   Json?
-  playedAt   DateTime   @default(now())
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  nonce      Int      @default(0)
+  metadata   String?  // JSON serialized — SQLite has no native Json type
+  playedAt   DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -178,14 +124,14 @@ model GameSession {
 
 // ── 6. Bonus ──────────────────────────────────────────────────────────────────
 model Bonus {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   userId      String
-  type        BonusType
-  tokensGiven Decimal   @db.Decimal(18, 4)
+  type        String   // BonusType: DAILY | WELCOME | REFERRAL | HOURLY | STREAK
+  tokensGiven Decimal
   streakDay   Int?
-  claimedAt   DateTime  @default(now())
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  claimedAt   DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -212,14 +158,14 @@ model Referral {
 
 // ── 8. LeaderboardEntry ───────────────────────────────────────────────────────
 model LeaderboardEntry {
-  id            String            @id @default(cuid())
+  id            String   @id @default(cuid())
   userId        String
   gameType      String
-  period        LeaderboardPeriod
-  totalWinnings Decimal           @default(0) @db.Decimal(18, 4)
+  period        String   // LeaderboardPeriod: DAILY | WEEKLY | ALLTIME
+  totalWinnings Decimal  @default(0)
   rank          Int
-  updatedAt     DateTime          @updatedAt
-  createdAt     DateTime          @default(now())
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -230,17 +176,17 @@ model LeaderboardEntry {
 
 // ── 9. Tournament ─────────────────────────────────────────────────────────────
 model Tournament {
-  id         String           @id @default(cuid())
+  id         String   @id @default(cuid())
   name       String
   gameType   String
-  entryFee   Decimal          @db.Decimal(18, 4)
-  prizePool  Decimal          @db.Decimal(18, 4)
+  entryFee   Decimal
+  prizePool  Decimal
   maxPlayers Int
   startTime  DateTime
   endTime    DateTime
-  status     TournamentStatus @default(UPCOMING)
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
+  status     String   @default("UPCOMING")  // TournamentStatus: UPCOMING | LIVE | COMPLETED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   entries TournamentEntry[]
 
@@ -252,9 +198,9 @@ model TournamentEntry {
   id           String   @id @default(cuid())
   tournamentId String
   userId       String
-  score        Decimal  @default(0) @db.Decimal(18, 4)
+  score        Decimal  @default(0)
   rank         Int?
-  prizeWon     Decimal  @default(0) @db.Decimal(18, 4)
+  prizeWon     Decimal  @default(0)
   joinedAt     DateTime @default(now())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -270,8 +216,8 @@ model TournamentEntry {
 
 // ── 11. Achievement ────────────────────────────────────────────────────────────
 model Achievement {
-  id             String @id @default(cuid())
-  name           String @unique
+  id             String   @id @default(cuid())
+  name           String   @unique
   description    String
   icon           String
   conditionType  String
@@ -332,4 +278,3 @@ model RefreshToken {
   @@index([userId])
   @@map("refresh_tokens")
 }
-

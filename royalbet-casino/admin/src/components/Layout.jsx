@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, CreditCard, Gamepad2,
-  Trophy, Bell, LogOut, Shield,
+  Trophy, Bell, LogOut, Shield, Coins,
 } from 'lucide-react';
 
 const NAV = [
@@ -11,6 +11,7 @@ const NAV = [
   { to: '/games',        icon: Gamepad2,        label: 'Game Audit' },
   { to: '/tournaments',  icon: Trophy,          label: 'Tournaments' },
   { to: '/notifications',icon: Bell,            label: 'Notifications' },
+  { to: '/coins',        icon: Coins,           label: 'Coin Management' },
 ];
 
 export default function Layout() {

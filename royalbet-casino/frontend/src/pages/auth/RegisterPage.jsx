@@ -6,6 +6,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { useAuth } from '../../store/AuthContext';
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -24,6 +25,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const {
     register,
@@ -36,9 +38,7 @@ export default function RegisterPage() {
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      // Backend expects phone with prefix (or will validate it)
       const phoneWithPrefix = `+91${data.phone}`;
-      
       const payload = {
         name: data.name,
         email: data.email,
@@ -46,10 +46,18 @@ export default function RegisterPage() {
         password: data.password,
       };
 
-      await axios.post('/auth/register', payload);
-      toast.success('OTP sent successfully!');
-      // Navigate to OTP page and pass the phone number in state
-      navigate('/verify-otp', { state: { phone: phoneWithPrefix } });
+      const res = await axios.post('/auth/register', payload);
+
+      // DEV MODE: backend returns tokens directly (no OTP needed)
+      if (res.data.accessToken) {
+        toast.success('Account created! Welcome to RoyalBet 🎰');
+        login(res.data.user, res.data.accessToken);
+        navigate('/lobby');
+      } else {
+        // PRODUCTION: OTP was sent — navigate to verify page
+        toast.success('OTP sent to your phone!');
+        navigate('/verify-otp', { state: { phone: phoneWithPrefix } });
+      }
     } catch (error) {
       if (error.response?.data?.details) {
         toast.error(error.response.data.details[0].message || 'Validation failed');
@@ -60,6 +68,7 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
+
 
   const handleGoogleLogin = () => {
     // Note: In real setup, you use @react-oauth/google. 

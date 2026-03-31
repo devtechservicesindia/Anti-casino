@@ -8,10 +8,11 @@
 
 import rateLimit from 'express-rate-limit';
 
-// ── Auth routes — strict (prevents brute-force attacks) ──────────────────────
+// ── Auth routes — strict in prod, relaxed in dev ─────────────────────────────
+const isDev = process.env.NODE_ENV !== 'production';
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: isDev ? 200 : 5,     // 200 in dev for easy testing; 5 in prod (brute-force protection)
   standardHeaders: true,
   legacyHeaders: false,
   message: {
