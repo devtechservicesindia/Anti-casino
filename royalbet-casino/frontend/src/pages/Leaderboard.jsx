@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useAuth } from '../../store/AuthContext';
+import { useAuth } from '../store/AuthContext';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Trophy, Medal, TrendingUp, Calendar, Zap } from 'lucide-react';
 
@@ -76,27 +76,27 @@ export default function Leaderboard() {
   const { data: lbData, isLoading: lbLoading } = useQuery({
     queryKey: ['leaderboard', period, game, page],
     queryFn: async () =>
-      (await axios.get(`/api/v1/leaderboard/${period}/${game}?page=${page}`)).data,
+      (await axios.get(`/leaderboard/${period}/${game}?page=${page}`)).data,
     keepPreviousData: true,
   });
 
   // ─── My rank ──────────────────────────────────────────────────
   const { data: myRanks } = useQuery({
     queryKey: ['myRanks'],
-    queryFn: async () => (await axios.get('/api/v1/leaderboard/me')).data,
+    queryFn: async () => (await axios.get('/leaderboard/me')).data,
     enabled: !!user,
   });
 
   // ─── Tournaments query ─────────────────────────────────────────
   const { data: tournaments, isLoading: tournLoading } = useQuery({
     queryKey: ['tournaments'],
-    queryFn: async () => (await axios.get('/api/v1/tournaments')).data,
+    queryFn: async () => (await axios.get('/tournaments')).data,
     enabled: tab === 'tournaments',
   });
 
   // ─── Join tournament ───────────────────────────────────────────
   const joinMutation = useMutation({
-    mutationFn: async (id) => (await axios.post(`/api/v1/tournaments/${id}/join`)).data,
+    mutationFn: async (id) => (await axios.post(`/tournaments/${id}/join`)).data,
     onSuccess: () => queryClient.invalidateQueries(['tournaments']),
   });
 

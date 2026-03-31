@@ -5,7 +5,7 @@ import axios from 'axios';
 import { io } from 'socket.io-client';
 import { ArrowLeft, Users, Coins, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../../store/AuthContext';
+import { useAuth } from '../../store/AuthContext';
 
 let socket = null;
 function getSocket() {

@@ -3,7 +3,7 @@ import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
 import { ArrowLeft, LogOut } from 'lucide-react';
-import { useAuth } from '../../../store/AuthContext';
+import { useAuth } from '../../store/AuthContext';
 
 // ─── Socket singleton ─────────────────────────────────────────────────────────
 let socket = null;

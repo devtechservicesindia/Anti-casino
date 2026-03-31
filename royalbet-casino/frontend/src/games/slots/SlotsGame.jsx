@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { Application, Container, Text, Graphics, BlurFilter } from 'pixi.js';
-import { useAuth } from '../../../store/AuthContext';
+import { useAuth } from '../../store/AuthContext';
 import { Volume2, VolumeX, ChevronDown, ChevronUp } from 'lucide-react';
 
 // --- Assets & Constants ---

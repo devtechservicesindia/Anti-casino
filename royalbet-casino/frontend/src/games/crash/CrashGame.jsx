@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { io } from 'socket.io-client';
-import { useAuth } from '../../../store/AuthContext';
+import { useAuth } from '../../store/AuthContext';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient }   from '@tanstack/react-query';
 import axios from 'axios';
 import { io }  from 'socket.io-client';
-import { useAuth } from '../../store/AuthContext';
+import { useAuth } from '../store/AuthContext';
 import { Link }    from 'react-router-dom';
 import {
   ArrowLeft, Copy, Check, Trophy, Lock, Zap, Users, Star,
@@ -55,22 +55,22 @@ export default function Profile() {
   // ─── Queries ──────────────────────────────────────────────────────────
   const { data: achievementsData, isLoading: achLoading } = useQuery({
     queryKey: ['achievements'],
-    queryFn:  async () => (await axios.get('/api/v1/achievements/me')).data,
+    queryFn:  async () => (await axios.get('/achievements/me')).data,
   });
 
   const { data: referralCode } = useQuery({
     queryKey: ['referralCode'],
-    queryFn:  async () => (await axios.get('/api/v1/referral/my-code')).data,
+    queryFn:  async () => (await axios.get('/referral/my-code')).data,
   });
 
   const { data: referralStats } = useQuery({
     queryKey: ['referralStats'],
-    queryFn:  async () => (await axios.get('/api/v1/referral/stats')).data,
+    queryFn:  async () => (await axios.get('/referral/stats')).data,
   });
 
   const { data: myRanks } = useQuery({
     queryKey: ['myRanks'],
-    queryFn:  async () => (await axios.get('/api/v1/leaderboard/me')).data,
+    queryFn:  async () => (await axios.get('/leaderboard/me')).data,
     enabled:  !!user,
   });
 

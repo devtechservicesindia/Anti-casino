@@ -3,49 +3,50 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
-// Configure global Axios settings for Auth
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || '/api/v1';
-axios.defaults.withCredentials = true; // IMPORTANT: send cookies (refreshToken) with every request
+/**
+ * CRITICAL: Vite proxy maps /api → http://localhost:4000/api
+ * Backend routes are prefixed /api/v1, so:
+ *   /api/v1/auth/login  →  http://localhost:4000/api/v1/auth/login ✅
+ */
+const API = '/api/v1';
+
+// Apply baseURL globally so all bare `axios` calls go through the proxy
+axios.defaults.baseURL = API;
+axios.defaults.withCredentials = true;
 
 const AuthContext = createContext();
-
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser]               = useState(null);
+  const [accessToken, setAccessToken] = useState(() => localStorage.getItem('accessToken'));
+  const [loading, setLoading]         = useState(true);
   const navigate = useNavigate();
 
-  // Configure Axios interceptor to attach access token globally
+  // ── Axios interceptor: attach Bearer token ─────────────────────────────────
   useEffect(() => {
-    const requestInterceptor = axios.interceptors.request.use((config) => {
-      if (accessToken) {
-        config.headers.Authorization = `Bearer ${accessToken}`;
-      }
+    const req = axios.interceptors.request.use(config => {
+      const token = localStorage.getItem('accessToken');
+      if (token) config.headers.Authorization = `Bearer ${token}`;
       return config;
     });
 
-    const responseInterceptor = axios.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
-        // If 401 Unauthorized and not already retrying, try to refresh token once
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
+    const res = axios.interceptors.response.use(
+      r => r,
+      async error => {
+        const orig = error.config;
+        if (error.response?.status === 401 && !orig._retry) {
+          orig._retry = true;
           try {
-            // Note: withCredentials: true sends the httpOnly cookie automatically
-            const res = await axios.post('/auth/refresh-token');
-            const newAccessToken = res.data.accessToken;
-            setAccessToken(newAccessToken);
-            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-            return axios(originalRequest); // retry original request
-          } catch (refreshError) {
-            // Refresh token failed, force logout
-            setUser(null);
-            setAccessToken(null);
+            const r = await axios.post('/auth/refresh-token');
+            const newToken = r.data.accessToken;
+            localStorage.setItem('accessToken', newToken);
+            setAccessToken(newToken);
+            orig.headers.Authorization = `Bearer ${newToken}`;
+            return axios(orig);
+          } catch {
+            _clearAuth();
             navigate('/login');
-            return Promise.reject(refreshError);
           }
         }
         return Promise.reject(error);
@@ -53,50 +54,69 @@ export const AuthProvider = ({ children }) => {
     );
 
     return () => {
-      axios.interceptors.request.eject(requestInterceptor);
-      axios.interceptors.response.eject(responseInterceptor);
+      axios.interceptors.request.eject(req);
+      axios.interceptors.response.eject(res);
     };
-  }, [accessToken, navigate]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
 
-  // Initial silent authentication via refresh token
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const res = await axios.post('/auth/refresh-token');
-        setAccessToken(res.data.accessToken);
-        setUser(res.data.user); // Assuming the backend returns the user obj
-      } catch (err) {
-        console.log('No valid session found');
-        setUser(null);
-        setAccessToken(null);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function _clearAuth() {
+    localStorage.removeItem('accessToken');
+    setUser(null);
+    setAccessToken(null);
+  }
 
-    initAuth();
-  }, []);
-
-  const login = (userData, token) => {
+  function _setAuth(userData, token) {
+    localStorage.setItem('accessToken', token);
     setUser(userData);
     setAccessToken(token);
-    navigate('/');
+  }
+
+  // ── Initial silent auth via refresh-token cookie ──────────────────────────
+  useEffect(() => {
+    const init = async () => {
+      const stored = localStorage.getItem('accessToken');
+      if (!stored) {
+        // Try cookie-based refresh
+        try {
+          const r = await axios.post('/auth/refresh-token');
+          _setAuth(r.data.user, r.data.accessToken);
+        } catch {
+          _clearAuth();
+        }
+      } else {
+        // Validate the stored token by fetching fresh state if needed
+        // We keep the stored token and let the interceptor handle 401s
+        // Attempt to hydrate user from stored state
+        // We'll read user from localStorage if we stored it
+        const storedUser = localStorage.getItem('userData');
+        if (storedUser) {
+          try { setUser(JSON.parse(storedUser)); } catch { /* ignore */ }
+        }
+      }
+      setLoading(false);
+    };
+    init();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Public API ─────────────────────────────────────────────────────────────
+  const login = (userData, token) => {
+    _setAuth(userData, token);
+    localStorage.setItem('userData', JSON.stringify(userData));
+    navigate('/lobby');
   };
 
   const logout = async () => {
-    try {
-      await axios.post('/auth/logout');
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setUser(null);
-      setAccessToken(null);
-      toast.success('Logged out successfully');
-      navigate('/login');
-    }
+    try { await axios.post('/auth/logout'); } catch { /* ignore */ }
+    _clearAuth();
+    localStorage.removeItem('userData');
+    toast.success('Logged out successfully');
+    navigate('/login');
   };
 
-  const isAuthenticated = !!user;
+  const isAuthenticated = !!user || !!accessToken;
 
   return (
     <AuthContext.Provider value={{ user, accessToken, login, logout, isAuthenticated, loading }}>
