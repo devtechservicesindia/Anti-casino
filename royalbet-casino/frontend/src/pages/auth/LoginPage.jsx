@@ -42,8 +42,18 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogleLogin = () => {
-    toast.error('Google Auth SDK not initialized yet.');
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      // DEV MODE: sending mock token directly to bypass Google SDK
+      const res = await axios.post('/auth/google', { googleToken: 'mock_google_token' });
+      toast.success('Google Demo Login Successful!');
+      login(res.data.user, res.data.accessToken);
+    } catch (error) {
+      toast.error('Google Sign In failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

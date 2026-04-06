@@ -108,7 +108,7 @@ export const handleSpin = async (req, res) => {
         gameType: 'ROULETTE',
         betAmount: totalBet,
         winAmount: totalWin,
-        outcome:   totalWin > totalBet ? 'WIN' : (totalWin > 0 ? 'PARTIAL' : 'LOSS'),
+        result:   totalWin > totalBet ? 'WIN' : (totalWin > 0 ? 'PARTIAL' : 'LOSS'),
         metadata:  JSON.stringify({
           winningNumber,
           color: getColor(winningNumber),

@@ -26,6 +26,16 @@ import CrashGame    from './games/crash/CrashGame';
 import PokerLobby   from './games/poker/PokerLobby';
 import PokerTable   from './games/poker/PokerTable';
 
+// New USA & Casual Games
+import VideoPokerGame from './games/video-poker/VideoPokerGame';
+import BaccaratGame from './games/baccarat/BaccaratGame';
+import KenoGame from './games/keno/KenoGame';
+import ThreeCardPokerGame from './games/three-card-poker/ThreeCardPokerGame';
+import PlinkoGame from './games/plinko/PlinkoGame';
+import LudoGame from './games/ludo/LudoGame';
+import SnakesGame from './games/snakes/SnakesGame';
+import SolitaireGame from './games/solitaire/SolitaireGame';
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -70,19 +80,30 @@ function App() {
                 <Route path="/profile"      element={<Profile />} />
                 <Route path="/coin-store"   element={<CoinStore />} />
 
-                {/* Games */}
+                {/* Legacy Games */}
                 <Route path="/game/slots"              element={<SlotsGame />} />
                 <Route path="/game/roulette"           element={<RouletteGame />} />
                 <Route path="/game/blackjack"          element={<BlackjackGame />} />
                 <Route path="/game/crash"              element={<CrashGame />} />
                 <Route path="/game/poker"              element={<PokerLobby />} />
                 <Route path="/game/poker/table/:tableId" element={<PokerTable />} />
+
+                {/* New USA & Casual Games */}
+                <Route path="/game/video-poker"        element={<VideoPokerGame />} />
+                <Route path="/game/baccarat"           element={<BaccaratGame />} />
+                <Route path="/game/keno"               element={<KenoGame />} />
+                <Route path="/game/three-card-poker"   element={<ThreeCardPokerGame />} />
+                <Route path="/game/plinko"             element={<PlinkoGame />} />
+                <Route path="/game/ludo"               element={<LudoGame />} />
+                <Route path="/game/snakes"             element={<SnakesGame />} />
+                <Route path="/game/solitaire"          element={<SolitaireGame />} />
               </Route>
             </Route>
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+
         </AuthProvider>
       </Router>
     </QueryClientProvider>

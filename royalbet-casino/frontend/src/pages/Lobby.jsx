@@ -17,11 +17,24 @@ const HERO_SLIDES = [
 ];
 
 const GAMES = [
+  // Casino Classics (Backend connected)
   { id: 'slots',     name: 'Royal Slots',  icon: '🎰', players: 1204, gradient: 'from-pink-600 to-purple-800',  glow: 'rgba(219,39,119,0.25)' },
   { id: 'roulette',  name: 'Roulette',     icon: '🎡', players: 843,  gradient: 'from-red-600 to-orange-800',  glow: 'rgba(220,38,38,0.25)' },
   { id: 'blackjack', name: 'Blackjack',    icon: '🃏', players: 301,  gradient: 'from-blue-600 to-indigo-800', glow: 'rgba(37,99,235,0.25)' },
   { id: 'crash',     name: 'Crash',        icon: '🚀', players: 2590, gradient: 'from-green-600 to-teal-800',  glow: 'rgba(22,163,74,0.25)' },
-  { id: 'poker',     name: 'Poker',        icon: '♠️', players: 512,  gradient: 'from-purple-600 to-fuchsia-800', glow: 'rgba(147,51,234,0.25)' },
+  { id: 'poker',     name: 'Poker',        icon: '♣️', players: 512,  gradient: 'from-purple-600 to-fuchsia-800', glow: 'rgba(147,51,234,0.25)' },
+  
+  // New USA Casino Games
+  { id: 'video-poker', name: 'Video Poker', icon: '🏧', players: 780,  gradient: 'from-emerald-600 to-teal-800', glow: 'rgba(52,211,153,0.25)' },
+  { id: 'baccarat',  name: 'Baccarat',     icon: '🎴', players: 410,  gradient: 'from-violet-600 to-purple-900', glow: 'rgba(139,92,246,0.25)' },
+  { id: 'keno',      name: 'Keno',         icon: '🎱', players: 1540, gradient: 'from-sky-600 to-blue-900', glow: 'rgba(14,165,233,0.25)' },
+  { id: 'three-card-poker', name: '3-Card', icon: '♠️', players: 320,  gradient: 'from-green-600 to-emerald-900', glow: 'rgba(34,197,94,0.25)' },
+  { id: 'plinko',    name: 'Plinko',       icon: '🎯', players: 4300, gradient: 'from-fuchsia-600 to-pink-900', glow: 'rgba(217,70,239,0.25)' },
+
+  // Casual & Social Games
+  { id: 'ludo',      name: 'Ludo',         icon: '🎲', players: 8900, gradient: 'from-red-500 to-red-800', glow: 'rgba(239,68,68,0.25)' },
+  { id: 'snakes',    name: 'Snake/Ladder', icon: '🐍', players: 5200, gradient: 'from-amber-500 to-orange-800', glow: 'rgba(245,158,11,0.25)' },
+  { id: 'solitaire', name: 'Solitaire',    icon: '♥', players: 2100, gradient: 'from-green-700 to-green-950', glow: 'rgba(21,128,61,0.25)' },
 ];
 
 // ─── API helpers ──────────────────────────────────────────────────────────────

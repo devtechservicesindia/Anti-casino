@@ -33,17 +33,19 @@ const noopPipeline = {
   exec: async () => [],
 };
 
+const memoryStore = new Map();
+
 const noopRedis = {
   // String ops
-  get:    async () => null,
-  set:    async () => 'OK',
-  setex:  async () => 'OK',
-  del:    async () => 0,
-  exists: async () => 0,
-  incr:   async () => 1,
-  incrby: async () => 1,
-  decr:   async () => 0,
-  decrby: async () => 0,
+  get:    async (key) => memoryStore.get(key) || null,
+  set:    async (key, val) => { memoryStore.set(key, val); return 'OK'; },
+  setex:  async (key, time, val) => { memoryStore.set(key, val); return 'OK'; },
+  del:    async (key) => { const e = memoryStore.has(key); memoryStore.delete(key); return e ? 1 : 0; },
+  exists: async (key) => memoryStore.has(key) ? 1 : 0,
+  incr:   async (key) => { const v = parseInt(memoryStore.get(key)||'0') + 1; memoryStore.set(key, String(v)); return v; },
+  incrby: async (key, by) => { const v = parseInt(memoryStore.get(key)||'0') + by; memoryStore.set(key, String(v)); return v; },
+  decr:   async (key) => { const v = parseInt(memoryStore.get(key)||'0') - 1; memoryStore.set(key, String(v)); return v; },
+  decrby: async (key, by) => { const v = parseInt(memoryStore.get(key)||'0') - by; memoryStore.set(key, String(v)); return v; },
   // Expiry
   expire: async () => 1,
   expireat: async () => 1,
@@ -51,13 +53,22 @@ const noopRedis = {
   pttl:   async () => -1,
   persist: async () => 0,
   // Hash ops
-  hset:   async () => 1,
-  hget:   async () => null,
+  hset:   async (key, field, val) => {
+    const hash = memoryStore.get(key) || {};
+    hash[field] = val;
+    memoryStore.set(key, hash);
+    return 1;
+  },
+  hget:   async (key, field) => { const hash = memoryStore.get(key); return hash ? hash[field] || null : null; },
   hmget:  async () => [],
   hmset:  async () => 'OK',
-  hgetall: async () => null,
-  hdel:   async () => 0,
-  hexists: async () => 0,
+  hgetall: async (key) => memoryStore.get(key) || null,
+  hdel:   async (key, field) => { 
+    const hash = memoryStore.get(key); 
+    if(hash && hash[field]) { delete hash[field]; return 1; } 
+    return 0; 
+  },
+  hexists: async (key, field) => { const hash = memoryStore.get(key); return hash && hash[field] ? 1 : 0; },
   hkeys:  async () => [],
   hvals:  async () => [],
   hlen:   async () => 0,
@@ -66,7 +77,7 @@ const noopRedis = {
   srem:   async () => 0,
   smembers: async () => [],
   sismember: async () => 0,
-  // Sorted set ops — extended (ioredis-specific method names)
+  // Sorted set ops
   zadd:   async () => 1,
   zrem:   async () => 0,
   zscore: async () => null,
@@ -74,19 +85,39 @@ const noopRedis = {
   zrevrange: async () => [],
   zrangebyscore: async () => [],
   zrevrangebyscore: async () => [],
-  zrangeWithScores: async () => [],          // ioredis returns [{value,score}]
-  zrevrangeWithScores: async () => [],       // used by leaderboardService
+  zrangeWithScores: async () => [],
+  zrevrangeWithScores: async () => [],
   zrank:  async () => null,
   zrevrank: async () => null,
   zcard:  async () => 0,
   zincrby: async () => '0',
-  incrbyfloat: async () => '0',              // used by slotsController
+  incrbyfloat: async () => '0',
   setnx:  async () => 1,
   // List ops
-  lpush:  async () => 1,
-  rpush:  async () => 1,
-  lrange: async () => [],
-  llen:   async () => 0,
+  lpush:  async (key, val) => {
+    const list = memoryStore.get(key) || [];
+    list.unshift(val);
+    memoryStore.set(key, list);
+    return list.length;
+  },
+  rpush:  async (key, val) => {
+    const list = memoryStore.get(key) || [];
+    list.push(val);
+    memoryStore.set(key, list);
+    return list.length;
+  },
+  lrange: async (key, start, stop) => {
+    const list = memoryStore.get(key) || [];
+    if (stop === -1) return list.slice(start);
+    return list.slice(start, stop + 1);
+  },
+  ltrim: async (key, start, stop) => {
+    const list = memoryStore.get(key) || [];
+    if (stop === -1) memoryStore.set(key, list.slice(start));
+    else memoryStore.set(key, list.slice(start, stop + 1));
+    return 'OK';
+  },
+  llen:   async (key) => (memoryStore.get(key) || []).length,
   // Misc
   keys:   async () => [],
   scan:   async () => ['0', []],

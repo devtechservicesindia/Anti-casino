@@ -11,11 +11,10 @@ import { useAuth } from '../../store/AuthContext';
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  phone: z.string().regex(/^\d{10}$/, 'Phone must be exactly 10 digits'),
+  phone: z.string().min(5, 'Phone must be at least 5 digits'),
   password: z
     .string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Must contain uppercase, lowercase and number'),
+    .min(6, 'Password must be at least 6 characters'),
   terms: z.boolean().refine((val) => val === true, {
     message: 'You must agree to the terms',
   }),
@@ -70,10 +69,18 @@ export default function RegisterPage() {
   };
 
 
-  const handleGoogleLogin = () => {
-    // Note: In real setup, you use @react-oauth/google. 
-    // This is placeholder for standard Google OAuth redirect or SDK popup.
-    toast.error('Google Auth SDK not initialized yet.');
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      // DEV MODE: sending mock token directly to bypass Google SDK
+      const res = await axios.post('/auth/google', { googleToken: 'mock_google_token' });
+      toast.success('Google Demo Login Successful!');
+      login(res.data.user, res.data.accessToken);
+    } catch (error) {
+      toast.error('Google Sign In failed');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
