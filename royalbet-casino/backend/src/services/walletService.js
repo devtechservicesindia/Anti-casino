@@ -367,7 +367,7 @@ export async function creditWinnings(userId, amount, gameType = 'GAME') {
   ]);
 
   // Record win in leaderboard (fire-and-forget — don't block payout)
-  const validTypes = ['SLOTS', 'ROULETTE', 'BLACKJACK', 'CRASH', 'POKER'];
+  const validTypes = ['SLOTS', 'ROULETTE', 'BLACKJACK', 'CRASH', 'POKER', 'LUDO', 'SNAKES', 'PLINKO'];
   const lbType = validTypes.includes(gameType?.toUpperCase()) ? gameType.toUpperCase() : null;
   if (lbType) {
     recordWin(userId, lbType, decAmount.toNumber()).catch(e =>

@@ -1,4 +1,5 @@
 // hooks/index.js – custom React hooks barrel
+export { useCoins }        from './useCoins';
 // export { useAuth }         from './useAuth';
 // export { useSocket }       from './useSocket';
 // export { useBalance }      from './useBalance';

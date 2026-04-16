@@ -16,6 +16,8 @@ import {
   claimDailyBonus,
   claimHourlyBonus,
   getBonusStatus,
+  spendCoins,
+  earnCoins,
 } from '../controllers/walletController.js';
 
 const router = Router();
@@ -50,5 +52,11 @@ router.post('/hourly-bonus', claimHourlyBonus);
 
 // GET /api/v1/wallet/bonus-status
 router.get('/bonus-status', getBonusStatus);
+
+// POST /api/v1/wallet/spend  — game coin deduction
+router.post('/spend', spendCoins);
+
+// POST /api/v1/wallet/earn   — game coin credit
+router.post('/earn', earnCoins);
 
 export default router;

@@ -80,7 +80,7 @@ export const handleSpin = async (req, res) => {
         gameType: 'SLOTS',
         betAmount,
         winAmount,
-        outcome:  winAmount > betAmount ? 'WIN' : (winAmount > 0 ? 'PARTIAL' : 'LOSS'),
+        result:  winAmount > betAmount ? 'WIN' : (winAmount > 0 ? 'PARTIAL' : 'LOSS'),
         metadata: JSON.stringify({ grid, winningLines, serverSeed, clientSeed, nonce }),
       },
     });

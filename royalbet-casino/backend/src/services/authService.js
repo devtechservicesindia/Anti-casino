@@ -186,11 +186,12 @@ export async function googleLogin({ googleToken }) {
 
   // DEV MODE: Skip Google verification if no client ID is provided
   if (!process.env.GOOGLE_CLIENT_ID || googleToken.startsWith('mock_')) {
-    console.log(`\n[DEV] Bypassing Google OAuth validation\n`);
-    googleId = `mock_google_${Date.now()}`;
-    email = `dev_${Date.now()}@gmail.com`;
-    name = "Dev Google User";
-    avatarUrl = "https://ui-avatars.com/api/?name=Dev+User";
+    console.log(`\n[DEV] Bypassing Google OAuth — using fixed demo account\n`);
+    // Always return the SAME fixed demo account so data persists across logins
+    googleId  = 'dev_google_demo_user_001';
+    email     = 'dev.demo@royalbet.dev';
+    name      = 'Demo Player';
+    avatarUrl = 'https://ui-avatars.com/api/?name=Demo+Player&background=FFD700&color=000&bold=true';
   } else {
     // Verify ID token with Google
     const ticket = await googleClient.verifyIdToken({

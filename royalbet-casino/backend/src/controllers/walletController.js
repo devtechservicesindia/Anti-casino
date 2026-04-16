@@ -5,6 +5,7 @@
  */
 
 import * as walletService from '../services/walletService.js';
+import { deductTokens, creditWinnings } from '../services/walletService.js';
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 const handleError = (res, err) => {
@@ -90,6 +91,32 @@ export const claimHourlyBonus = async (req, res) => {
 export const getBonusStatus = async (req, res) => {
   try {
     const result = await walletService.getBonusStatus(req.user.id);
+    return res.json(result);
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+// ─── POST /wallet/spend  (used by browser games) ─────────────────────────────
+export const spendCoins = async (req, res) => {
+  try {
+    const { amount, gameType = 'GAME' } = req.body;
+    if (!amount || isNaN(amount) || Number(amount) <= 0)
+      return res.status(400).json({ error: 'Invalid amount' });
+    const result = await deductTokens(req.user.id, Number(amount), gameType);
+    return res.json(result);
+  } catch (err) {
+    return handleError(res, err);
+  }
+};
+
+// ─── POST /wallet/earn  (used by browser games) ──────────────────────────────
+export const earnCoins = async (req, res) => {
+  try {
+    const { amount, gameType = 'GAME' } = req.body;
+    if (!amount || isNaN(amount) || Number(amount) <= 0)
+      return res.status(400).json({ error: 'Invalid amount' });
+    const result = await creditWinnings(req.user.id, Number(amount), gameType);
     return res.json(result);
   } catch (err) {
     return handleError(res, err);

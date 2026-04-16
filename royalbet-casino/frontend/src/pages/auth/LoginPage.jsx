@@ -45,12 +45,12 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      // DEV MODE: sending mock token directly to bypass Google SDK
       const res = await axios.post('/auth/google', { googleToken: 'mock_google_token' });
-      toast.success('Google Demo Login Successful!');
+      toast.success('Welcome, Demo Player! 🎰');
       login(res.data.user, res.data.accessToken);
+      navigate('/lobby');
     } catch (error) {
-      toast.error('Google Sign In failed');
+      toast.error(error.response?.data?.error || 'Google Sign In failed');
     } finally {
       setIsLoading(false);
     }
