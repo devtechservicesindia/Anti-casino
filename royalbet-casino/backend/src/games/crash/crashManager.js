@@ -166,6 +166,7 @@ export async function getRoundBets(roundId) {
   const redis = getRedis();
   const raw = await redis.hgetall(`crash:bets:${roundId}`);
   const bets = {};
+  if (!raw) return bets;
   for (const [userId, val] of Object.entries(raw)) {
     bets[userId] = JSON.parse(val);
   }
