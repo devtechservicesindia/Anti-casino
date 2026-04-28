@@ -267,7 +267,7 @@ model AdminLog {
 // ── 14. RefreshToken ──────────────────────────────────────────────────────────
 model RefreshToken {
   id        String   @id @default(cuid())
-  userId    String
+  userId    String   @unique
   token     String   // bcrypt hash of the actual refresh token
   expiresAt DateTime
   createdAt DateTime @default(now())
@@ -275,6 +275,5 @@ model RefreshToken {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId])
   @@map("refresh_tokens")
 }

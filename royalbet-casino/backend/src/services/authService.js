@@ -43,18 +43,20 @@ async function issueTokens(user) {
   const accessToken  = signAccessToken(payload);
   const refreshToken = signRefreshToken(payload);
 
-  // Store bcrypt hash of refresh token in DB
-  const hashedRefresh = await bcrypt.hash(refreshToken, BCRYPT_ROUNDS);
-  await prisma.refreshToken.upsert({
-    where:  { userId: user.id },
-    update: { token: hashedRefresh, expiresAt: new Date(Date.now() + 30 * 24 * 3600 * 1000) },
-    create: { userId: user.id, token: hashedRefresh, expiresAt: new Date(Date.now() + 30 * 24 * 3600 * 1000) },
-  }).catch(() => {
-    // If upsert fails because no unique, do a simple create
-    return prisma.refreshToken.create({
-      data: { userId: user.id, token: hashedRefresh, expiresAt: new Date(Date.now() + 30 * 24 * 3600 * 1000) },
-    });
-  });
+  // Use 8 rounds for refresh-token hash (stored server-side only — 12 is overkill and slow)
+  const hashedRefresh = await bcrypt.hash(refreshToken, 8);
+
+  // Atomic delete-then-create — works whether or not a row already exists
+  await prisma.$transaction([
+    prisma.refreshToken.deleteMany({ where: { userId: user.id } }),
+    prisma.refreshToken.create({
+      data: {
+        userId:    user.id,
+        token:     hashedRefresh,
+        expiresAt: new Date(Date.now() + 30 * 24 * 3600 * 1000),
+      },
+    }),
+  ]);
 
   return { accessToken, refreshToken };
 }
